@@ -1,0 +1,73 @@
+{
+  "name": "ucost-discovery-hub",
+  "version": "1.0.0",
+  "description": "UCOST Discovery Hub - Museum Exhibit Management System by Uttarakhand Science and Technology Council",
+  "private": true,
+  "workspaces": [
+    "project/*",
+    "desktop"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "cd project/backend/backend && npm run dev",
+    "dev:frontend": "cd project/frontend/ucost-discovery-hub && npm run dev",
+    "dev:desktop": "cd desktop && npm run dev",
+    "dev:mobile": "cd project/mobile-app && flutter run",
+    "dev:ai": "cd project/ai-system && npm run dev",
+    "install:all": "npm install && npm run install:workspaces",
+    "install:workspaces": "npm install --workspaces",
+    "build": "npm run build:backend && npm run build:frontend && npm run build:desktop",
+    "build:backend": "cd project/backend/backend && npm run build",
+    "build:frontend": "cd project/frontend/ucost-discovery-hub && npm run build",
+    "build:desktop": "cd desktop && npm run build",
+    "build:ai": "cd project/ai-system && npm run build",
+    "test": "npm run test:backend && npm run test:frontend && npm run test:ai",
+    "test:backend": "cd project/backend/backend && npm test",
+    "test:frontend": "cd project/frontend/ucost-discovery-hub && npm test",
+    "test:ai": "cd project/ai-system && npm test",
+    "clean": "npm run clean:all",
+    "clean:all": "rimraf dist node_modules project/*/node_modules project/*/dist desktop/node_modules desktop/dist",
+    "start": "cd desktop && npm start",
+    "package": "npm run build && cd desktop && npm run package",
+    "dist": "npm run build && cd desktop && npm run dist",
+    "create-exe": "npm run build && cd desktop && npm run create-exe"
+  },
+  "keywords": [
+    "museum",
+    "discovery",
+    "desktop",
+    "electron",
+    "ucost",
+    "uttarakhand",
+    "science",
+    "technology",
+    "ai",
+    "p2p",
+    "flutter",
+    "react"
+  ],
+  "author": "Uttarakhand Science and Technology Council",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "rimraf": "^5.0.5",
+    "wait-on": "^7.2.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ucost/uc-discovery-hub.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ucost/uc-discovery-hub/issues"
+  },
+  "homepage": "https://ucost.uk.gov.in",
+  "dependencies": {
+    "axios": "^1.11.0",
+    "form-data": "^4.0.4",
+    "node-fetch": "^3.3.2"
+  }
+}

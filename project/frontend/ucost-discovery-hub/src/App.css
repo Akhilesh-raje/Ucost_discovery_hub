@@ -1,0 +1,208 @@
+/* UCOST Discovery Hub - Custom styles */
+
+/* Ensure full viewport usage */
+#root {
+  width: 100vw;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Smooth transitions for all interactive elements */
+button, .card, [role="button"] {
+  transition: var(--transition-smooth);
+}
+
+/* Enhanced focus styles for accessibility */
+button:focus-visible,
+[role="button"]:focus-visible {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 2px;
+}
+
+/* Kiosk-optimized touch targets */
+.touch-target {
+  min-height: 48px;
+  min-width: 48px;
+}
+
+/* Existing styles */
+.App {
+  text-align: center;
+}
+
+.App-logo {
+  height: 40vmin;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
+
+.App-header {
+  background-color: #282c34;
+  padding: 20px;
+  color: white;
+}
+
+.App-link {
+  color: #61dafb;
+}
+
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Desktop-specific styles for Electron app */
+.electron-app {
+  /* Remove default browser styling */
+  -webkit-app-region: no-drag;
+  user-select: none;
+}
+
+.electron-app * {
+  -webkit-user-select: text;
+}
+
+/* Custom title bar for desktop */
+.electron-app .title-bar {
+  -webkit-app-region: drag;
+  height: 32px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+/* Desktop menu integration */
+.electron-app .desktop-menu {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid #e5e7eb;
+  z-index: 1000;
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* Desktop-specific buttons */
+.electron-app .desktop-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.electron-app .desktop-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+/* Desktop window controls */
+.electron-app .window-controls {
+  position: fixed;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  gap: 4px;
+  z-index: 1001;
+}
+
+.electron-app .window-control-btn {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+}
+
+.electron-app .window-control-btn.close {
+  background: #ff5f56;
+}
+
+.electron-app .window-control-btn.minimize {
+  background: #ffbd2e;
+}
+
+.electron-app .window-control-btn.maximize {
+  background: #27c93f;
+}
+
+/* Desktop-specific scrollbars */
+.electron-app ::-webkit-scrollbar {
+  width: 8px;
+}
+
+.electron-app ::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+.electron-app ::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.electron-app ::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Desktop app container */
+.electron-app .app-container {
+  padding-top: 40px; /* Space for title bar */
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+}
+
+/* Desktop-specific dialogs */
+.electron-app .desktop-dialog {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* Desktop-specific animations */
+.electron-app .fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Desktop-specific responsive design */
+@media (max-width: 768px) {
+  .electron-app .desktop-menu {
+    display: none;
+  }
+  
+  .electron-app .app-container {
+    padding-top: 0;
+  }
+}

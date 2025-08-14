@@ -1,0 +1,16 @@
+{
+  "contextProviders": ["pieces"],
+  "allowExternalContext": true,
+  "pieces": {
+    "enabled": true,
+    "mcpEnabled": true,
+    "replMode": true
+  },
+  "terminal": {
+    "integrated": {
+      "shell": {
+        "windows": "powershell.exe"
+      }
+    }
+  }
+} 

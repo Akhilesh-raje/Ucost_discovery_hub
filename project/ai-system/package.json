@@ -1,0 +1,22 @@
+{
+  "name": "ucost-ai-system",
+  "version": "1.0.0",
+  "description": "AI System for UCOST Discovery Hub",
+  "main": "dist/core/UC_AISystem.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rimraf dist",
+    "test": "echo \"No tests specified\" && exit 0"
+  },
+  "dependencies": {
+    "typescript": "^5.3.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "rimraf": "^5.0.5"
+  },
+  "keywords": ["ai", "museum", "recommendations", "ucost"],
+  "author": "UCOST Discovery Hub Team",
+  "license": "MIT"
+} 

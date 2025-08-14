@@ -1,0 +1,85 @@
+name: ucost_mobile_app
+description: "UCOST Discovery Hub Mobile Application - World Class Museum Management System"
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.4.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # Core UI
+  cupertino_icons: ^1.0.8
+  flutter_svg: ^2.2.0
+  
+  # QR Code functionality - Using stable alternatives
+  qr_flutter: ^4.1.0
+  mobile_scanner: ^3.5.6  # Modern QR scanner
+  
+  # Network and API
+  http: ^1.4.0
+  dio: ^5.8.0+1
+  web_socket_channel: ^2.4.5
+  connectivity_plus: ^5.0.2
+  
+  # Storage and File Management - Using stable alternatives
+  shared_preferences: ^2.5.3
+  path_provider: ^2.1.5
+  image_picker: ^1.1.2
+  permission_handler: ^11.4.0
+  
+  # State Management
+  provider: ^6.1.5
+  get_it: ^7.7.0
+  
+  # P2P and Networking - Using modern alternatives
+  network_info_plus: ^4.1.0+1
+  wifi_scan: ^0.4.1+2
+  # nearby_connections: ^3.3.1  # Temporarily disabled due to namespace issues
+  
+  # Utilities
+  crypto: ^3.0.6
+  uuid: ^4.5.1
+  intl: ^0.18.1
+  url_launcher: ^6.3.2
+  
+  # UI Enhancements
+  flutter_staggered_animations: ^1.1.1
+  shimmer: ^3.0.0
+  lottie: ^2.7.0
+  flutter_animate: ^4.5.0
+  
+  # Local Database
+  sqflite: ^2.3.3+1
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+  
+  # Charts and Data Visualization
+  fl_chart: ^0.69.0
+  
+  # Notifications
+  flutter_local_notifications: ^17.2.2
+  
+  # Background Processing
+  workmanager: ^0.5.2
+  
+  # Real-time Communication
+  socket_io_client: ^2.0.3+1
+  
+  # Admin Panel Integration
+  webview_flutter: ^4.7.0
+  
+  # File Management - Using image_picker for now
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.2
+  hive_generator: ^2.0.1
+  build_runner: ^2.4.14
+
+flutter:
+  uses-material-design: true 
