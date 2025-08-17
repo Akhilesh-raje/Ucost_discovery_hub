@@ -1,262 +1,351 @@
-# UCOST Discovery Hub Mobile App
+# 🏛️ UCOST Mobile Admin App
 
-## 🌟 World-Class Museum Management System
+**World-Class Museum Management System with Local-First P2P Sync**
 
-A comprehensive Flutter mobile application for museum exhibit management with advanced P2P connectivity, QR code scanning, and real-time synchronization capabilities.
+A powerful Flutter-based mobile application that enables museum administrators to upload and manage exhibits offline, with automatic synchronization to PC databases when connected to the same local network.
 
 ## ✨ Features
 
-### 🔗 **P2P Connectivity**
-- **Device Discovery**: Automatically discover nearby kiosks, PCs, and other mobile devices
-- **Multiple Connection Types**: WiFi, Bluetooth, Mobile Data, and Direct P2P
-- **Auto-Sync**: Automatically synchronize when devices are nearby
-- **Real-time Communication**: Instant data transfer between connected devices
+### 🎯 **Core Functionality**
+- **Exhibit Management**: Create, edit, and delete museum exhibits
+- **Image Upload**: Multi-image support with local storage
+- **Offline-First**: Works completely offline with local SQLite database
+- **P2P Auto-Sync**: Automatically syncs with PC when on same WiFi network
 
-### 📱 **QR Code System**
-- **QR Code Scanner**: Scan QR codes to connect to devices or download apps
-- **QR Code Generator**: Generate QR codes for device pairing and app downloads
-- **Multiple QR Types**: Device connection, app download, and P2P session QR codes
+### 🔄 **Smart Synchronization**
+- **Auto-Discovery**: Automatically finds PC database servers on local network
+- **mDNS Support**: Zero-configuration networking using multicast DNS
+- **Conflict Resolution**: Handles data conflicts between devices
+- **Sync Status Tracking**: Real-time sync status and progress monitoring
 
-### 🏛️ **Exhibit Management**
-- **Comprehensive Exhibit Data**: Name, description, category, location, images
-- **Offline Support**: Work without internet connection
-- **Upload Queue**: Queue exhibits for upload when connection is restored
-- **Image Management**: Support for multiple images per exhibit
-- **Search & Filter**: Advanced search and category filtering
+### 📱 **Cross-Platform Support**
+- **Android**: Full native Android support
+- **iOS**: Full native iOS support  
+- **Capacitor**: Web and desktop deployment capabilities
+- **Responsive Design**: Optimized for all screen sizes
 
-### 📊 **Analytics & Statistics**
-- **Real-time Stats**: Total exhibits, pending uploads, categories, connected devices
-- **Activity Tracking**: Recent activity with timestamps
-- **Progress Tracking**: Upload progress with visual indicators
+## 🚀 Quick Start
 
-### 🔔 **Notifications**
-- **Connection Notifications**: Device connect/disconnect alerts
-- **Upload Notifications**: Success/failure notifications for exhibit uploads
-- **Sync Notifications**: Progress updates during synchronization
-- **QR Code Notifications**: Scan result notifications
+### Prerequisites
+- Flutter SDK (3.4.0 or higher)
+- Node.js (16 or higher)
+- Android Studio (for Android development)
+- Xcode (for iOS development, macOS only)
 
-### 🎨 **Modern UI/UX**
-- **Material Design 3**: Latest Material Design components
-- **Dark/Light Theme**: Automatic theme switching
-- **Smooth Animations**: Staggered animations and transitions
-- **Responsive Design**: Works on all screen sizes
-- **Accessibility**: Full accessibility support
-
-### 🔒 **Security & Privacy**
-- **Permission Management**: Camera, storage, location, Bluetooth permissions
-- **Data Encryption**: Secure data transmission
-- **Local Storage**: Encrypted local database
-- **Privacy Controls**: User-controlled data sharing
-
-## 🏗️ Architecture
-
-### **State Management**
-- **Provider Pattern**: Centralized state management
-- **Multiple Providers**: App, Connection, and Exhibit providers
-- **Reactive UI**: Real-time UI updates based on state changes
-
-### **Services Layer**
-- **API Service**: RESTful API communication
-- **P2P Service**: Device-to-device communication
-- **Storage Service**: Local data persistence
-- **QR Service**: QR code generation and scanning
-- **Notification Service**: Push notifications
-
-### **Data Models**
-- **Exhibit Model**: Comprehensive exhibit data structure
-- **Device Model**: Connected device information
-- **Sync Status**: Synchronization state management
-
-## 📱 Screens
-
-### **Home Screen**
-- Connection status display
-- Quick action cards
-- Statistics dashboard
-- Recent exhibits
-- Activity feed
-
-### **QR Scanner Screen**
-- Camera-based QR scanning
-- Multiple QR code type support
-- Real-time scan feedback
-
-### **Exhibit Upload Screen**
-- Form-based exhibit creation
-- Image picker integration
-- Category selection
-- Location mapping
-
-### **P2P Sync Screen**
-- Device discovery
-- Connection management
-- Sync progress tracking
-- Data transfer status
-
-### **Settings Screen**
-- App configuration
-- Connection preferences
-- Notification settings
-- Data management
-
-## 🚀 Getting Started
-
-### **Prerequisites**
-- Flutter SDK 3.4.0 or higher
-- Android Studio / VS Code
-- Android device or emulator
-- USB debugging enabled
-
-### **Installation**
+### Installation
 
 1. **Clone the repository**
    ```bash
-   git clone <repository-url>
-   cd mobile-app
+   cd project/mobile-app/mobile-app
    ```
 
-2. **Install dependencies**
+2. **Install Flutter dependencies**
    ```bash
    flutter pub get
    ```
 
-3. **Run the app**
+3. **Install Capacitor**
    ```bash
-   flutter run
+   npm install
    ```
 
-### **Configuration**
+4. **Build and setup Capacitor**
+   ```bash
+   node scripts/build_capacitor.js build
+   ```
 
-1. **Permissions**: Grant camera, storage, and location permissions
-2. **Network**: Ensure WiFi or mobile data is available
-3. **Bluetooth**: Enable Bluetooth for P2P connections
+### Running the App
 
-## 🔧 Development
+#### **Development Mode**
+```bash
+# Run on Android emulator/device
+node scripts/build_capacitor.js run android
+
+# Run on iOS simulator/device
+node scripts/build_capacitor.js run ios
+
+# Open in Android Studio
+node scripts/build_capacitor.js open android
+
+# Open in Xcode
+node scripts/build_capacitor.js open ios
+```
+
+#### **Production Build**
+```bash
+# Build Android APK
+node scripts/build_capacitor.js release android
+
+# Build iOS app (requires Xcode)
+node scripts/build_capacitor.js release ios
+```
+
+## 🏗️ Architecture
+
+### **Local-First Design**
+```
+📱 Mobile App → 🗄️ Local SQLite → 🔄 P2P Sync → 💻 PC Database
+```
+
+### **Core Components**
+
+#### **1. Database Service (`database_service.dart`)**
+- **SQLite Integration**: Local data persistence using Drift
+- **Sync Tracking**: Tracks sync status for all exhibits
+- **Conflict Resolution**: Handles data conflicts gracefully
+
+#### **2. Enhanced P2P Service (`enhanced_p2p_service.dart`)**
+- **mDNS Discovery**: Automatic device discovery on local network
+- **Auto-Connection**: Automatically connects to PC servers
+- **Real-time Sync**: Continuous synchronization when connected
+
+#### **3. Enhanced Exhibit Provider (`enhanced_exhibit_provider.dart`)**
+- **State Management**: Manages exhibit data and sync status
+- **Offline Operations**: All operations work offline
+- **Sync Coordination**: Coordinates with P2P service
+
+#### **4. UI Components**
+- **Enhanced Upload Screen**: Rich exhibit creation interface
+- **Sync Status Panel**: Real-time sync monitoring
+- **Settings Management**: App configuration and preferences
+
+## 🔧 Configuration
+
+### **Capacitor Configuration**
+```typescript
+// capacitor.config.ts
+{
+  appId: 'com.ucost.mobileapp',
+  appName: 'UCOST Mobile Admin',
+  webDir: 'build/web',
+  plugins: {
+    SplashScreen: { /* ... */ },
+    StatusBar: { /* ... */ },
+    LocalNotifications: { /* ... */ }
+  }
+}
+```
+
+### **P2P Network Configuration**
+```dart
+// Enhanced P2P Service
+final String _serviceType = '_ucost-sync._tcp';
+final String _serviceName = 'UCOST-Mobile-App';
+static const Duration _autoSyncInterval = Duration(seconds: 30);
+```
+
+## 📊 Database Schema
+
+### **Exhibits Table**
+```sql
+CREATE TABLE exhibits (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  description TEXT NOT NULL,
+  category TEXT NOT NULL,
+  location TEXT NOT NULL,
+  images TEXT, -- Pipe-separated image paths
+  created_at DATETIME NOT NULL,
+  updated_at DATETIME NOT NULL,
+  is_deleted BOOLEAN DEFAULT FALSE,
+  metadata TEXT, -- JSON metadata
+  sync_status TEXT DEFAULT 'pending',
+  last_sync_attempt DATETIME,
+  sync_retry_count INTEGER DEFAULT 0
+);
+```
+
+### **Sync Logs Table**
+```sql
+CREATE TABLE sync_logs (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  exhibit_id TEXT NOT NULL,
+  action TEXT NOT NULL,
+  status TEXT NOT NULL,
+  timestamp DATETIME NOT NULL,
+  error_message TEXT,
+  target_device TEXT
+);
+```
+
+## 🔄 P2P Sync Workflow
+
+### **1. Offline Operation**
+```
+📱 Admin uploads exhibit → 💾 Saved to local SQLite → ✅ Ready for sync
+```
+
+### **2. Network Discovery**
+```
+📶 WiFi connected → 🔍 mDNS discovery → 🖥️ PC server found → 🔗 Auto-connect
+```
+
+### **3. Automatic Sync**
+```
+🔄 Auto-sync every 30s → 📤 Send pending exhibits → 💻 PC database updated → ✅ Sync complete
+```
+
+### **4. Conflict Resolution**
+```
+⚠️ Conflict detected → 🔄 Merge strategies → 📊 Data integrity → ✅ Conflict resolved
+```
+
+## 🛠️ Development
 
 ### **Project Structure**
 ```
 lib/
-├── main.dart                 # App entry point
-├── models/                   # Data models
-├── providers/                # State management
-├── screens/                  # UI screens
-├── services/                 # Business logic
-├── utils/                    # Utilities and constants
-└── widgets/                  # Reusable components
+├── models/           # Data models
+├── providers/        # State management
+├── screens/          # UI screens
+├── services/         # Business logic
+├── utils/            # Utilities
+└── main.dart         # App entry point
 ```
 
 ### **Key Dependencies**
-- **provider**: State management
-- **get_it**: Dependency injection
-- **hive**: Local database
-- **qr_code_scanner**: QR code scanning
-- **nearby_connections**: P2P communication
-- **flutter_local_notifications**: Push notifications
-- **image_picker**: Image selection
-- **connectivity_plus**: Network monitoring
-
-### **Build Commands**
-```bash
-# Development build
-flutter run
-
-# Release build
-flutter build apk --release
-
-# Debug build
-flutter build apk --debug
+```yaml
+dependencies:
+  flutter: sdk: flutter
+  drift: ^2.15.0           # Type-safe SQLite
+  multicast_dns: ^0.3.0+1  # mDNS discovery
+  network_info_plus: ^4.1.0+1  # Network information
+  connectivity_plus: ^5.0.2    # Connectivity monitoring
+  image_picker: ^1.1.2         # Image selection
+  path_provider: ^2.1.5        # File system access
 ```
 
-## 📊 Performance
-
-### **Optimizations**
-- **Lazy Loading**: Images and data loaded on demand
-- **Caching**: Local storage for offline access
-- **Compression**: Image compression for faster uploads
-- **Background Processing**: Non-blocking operations
-
-### **Memory Management**
-- **Disposal**: Proper resource cleanup
-- **Image Caching**: Efficient image memory usage
-- **Stream Management**: Proper stream disposal
-
-## 🔄 Integration
-
-### **Backend Integration**
-- **RESTful APIs**: Standard HTTP communication
-- **WebSocket**: Real-time updates
-- **File Upload**: Multipart form data
-- **Authentication**: Token-based auth
-
-### **Desktop App Integration**
-- **QR Code Pairing**: Scan QR codes from desktop app
-- **Data Synchronization**: Bidirectional sync
-- **Shared Database**: Consistent data across platforms
-
-## 🧪 Testing
-
-### **Unit Tests**
+### **Building and Testing**
 ```bash
+# Run tests
 flutter test
+
+# Build for web
+flutter build web
+
+# Build for mobile
+flutter build apk --release
+flutter build ios --release
+
+# Analyze code
+flutter analyze
 ```
 
-### **Widget Tests**
+## 🚀 Deployment
+
+### **Android**
+1. Build APK: `node scripts/build_capacitor.js release android`
+2. APK location: `android/app/build/outputs/apk/release/`
+3. Install on device or distribute via app stores
+
+### **iOS**
+1. Open in Xcode: `node scripts/build_capacitor.js open ios`
+2. Configure signing and capabilities
+3. Build and archive for App Store distribution
+
+### **Web**
+1. Build web version: `flutter build web`
+2. Deploy to any web hosting service
+3. Access via browser on any device
+
+## 🔍 Troubleshooting
+
+### **Common Issues**
+
+#### **P2P Connection Failed**
+- Check if devices are on same WiFi network
+- Verify firewall settings allow local connections
+- Ensure PC server is running and accessible
+
+#### **Sync Not Working**
+- Check sync status in app
+- Verify database permissions
+- Review sync logs for errors
+
+#### **Build Errors**
+- Ensure Flutter and Node.js versions are compatible
+- Clean build: `flutter clean && flutter pub get`
+- Check Capacitor configuration
+
+### **Debug Mode**
 ```bash
-flutter test test/widget_test.dart
+# Enable debug logging
+flutter run --debug
+
+# View device logs
+flutter logs
+
+# Check P2P service status
+# Look for logs starting with 🔍 📡 🔗 🔄
 ```
 
-### **Integration Tests**
-```bash
-flutter drive --target=test_driver/app.dart
-```
+## 📱 Usage Guide
 
-## 📈 Analytics
+### **For Museum Administrators**
 
-### **Usage Tracking**
-- **Screen Views**: Track user navigation
-- **Feature Usage**: Monitor feature adoption
-- **Error Tracking**: Crash and error reporting
-- **Performance Metrics**: App performance monitoring
+1. **Upload Exhibits**
+   - Open app and go to Upload tab
+   - Fill in exhibit details (name, description, category, location)
+   - Add multiple images
+   - Tap "Upload Exhibit"
 
-## 🔮 Future Enhancements
+2. **Monitor Sync Status**
+   - Check connection status at top of screen
+   - View pending sync count
+   - Monitor sync progress in real-time
 
-### **Planned Features**
-- **AI Integration**: Smart exhibit recommendations
-- **AR Support**: Augmented reality exhibit viewing
-- **Voice Commands**: Voice-controlled navigation
-- **Offline Maps**: Indoor navigation
-- **Multi-language**: Internationalization support
+3. **Manage Data**
+   - View all uploaded exhibits
+   - Edit exhibit information
+   - Delete outdated exhibits
 
-### **Technical Improvements**
-- **Microservices**: Backend service decomposition
-- **GraphQL**: Advanced data querying
-- **Real-time Analytics**: Live usage analytics
-- **Advanced Security**: Biometric authentication
+### **For IT Administrators**
+
+1. **Setup PC Server**
+   - Run UCOST backend on PC
+   - Ensure mDNS service is enabled
+   - Configure firewall for local connections
+
+2. **Network Configuration**
+   - Ensure mobile devices and PC are on same WiFi
+   - Configure network security appropriately
+   - Monitor network performance
+
+## 🔒 Security Features
+
+- **Local Data Encryption**: SQLite database encryption
+- **Secure P2P Communication**: HTTP over local network
+- **Permission Management**: Camera and storage access control
+- **Data Validation**: Input sanitization and validation
+
+## 📈 Performance
+
+- **Offline Performance**: Instant exhibit creation and editing
+- **Sync Efficiency**: Only syncs changed data
+- **Memory Management**: Efficient image handling and storage
+- **Battery Optimization**: Minimal background processing
 
 ## 🤝 Contributing
 
-### **Development Guidelines**
-1. Follow Flutter best practices
-2. Write comprehensive tests
-3. Document all new features
-4. Maintain code quality standards
-5. Use conventional commit messages
-
-### **Code Style**
-- **Dart**: Follow official Dart style guide
-- **Flutter**: Use Flutter widget patterns
-- **Architecture**: Follow clean architecture principles
+1. Fork the repository
+2. Create feature branch: `git checkout -b feature-name`
+3. Commit changes: `git commit -am 'Add feature'`
+4. Push branch: `git push origin feature-name`
+5. Submit pull request
 
 ## 📄 License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
-## 🙏 Acknowledgments
+## 🆘 Support
 
-- **Flutter Team**: For the amazing framework
-- **Material Design**: For the design system
-- **Open Source Community**: For the excellent packages
+- **Documentation**: Check this README and inline code comments
+- **Issues**: Report bugs via GitHub Issues
+- **Discussions**: Join community discussions on GitHub
+- **Email**: Contact development team for enterprise support
 
 ---
 
-**UCOST Discovery Hub Mobile App** - Revolutionizing museum management with cutting-edge mobile technology! 🚀 
+**Built with ❤️ for the UCOST Discovery Hub Project**
+
+*Empowering museums with intelligent, offline-first exhibit management* 

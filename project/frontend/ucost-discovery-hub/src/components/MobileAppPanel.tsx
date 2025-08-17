@@ -270,16 +270,16 @@ export default function MobileAppPanel({ onBack }: MobileAppPanelProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-cosmic p-6">
+    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 p-6">
       <div className="max-w-6xl mx-auto">
         <div className="mb-8">
-          <Button variant="ghost" onClick={onBack} className="mb-4">
+          <Button variant="ghost" onClick={onBack} className="mb-4 text-white hover:bg-gray-800">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Admin Panel
           </Button>
           
-          <h1 className="text-4xl font-bold mb-2">Mobile App Management</h1>
-          <p className="text-muted-foreground">Generate QR codes and manage mobile devices</p>
+          <h1 className="text-4xl font-bold mb-2 text-white">Mobile App Management</h1>
+          <p className="text-gray-300">Generate QR codes and manage mobile devices</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

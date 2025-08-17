@@ -98,12 +98,12 @@ const Index = () => {
 
   return (
     <div className="relative">
-      {/* Floating Tour Button */}
+      {/* Floating Tour Button - Mobile optimized */}
       {currentScreen !== "welcome" && currentScreen !== "tour" && tourExhibits.length > 0 && (
-        <div className="fixed bottom-8 right-8 z-50">
+        <div className="fixed bottom-4 right-4 md:bottom-8 md:right-8 z-50">
           <button
             onClick={handleShowTour}
-            className="bg-gradient-cosmic text-foreground px-6 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 font-bold"
+            className="bg-gradient-cosmic text-foreground px-4 py-3 md:px-6 md:py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 font-bold text-sm md:text-base"
           >
             My Tour ({tourExhibits.length})
           </button>

@@ -1,15 +1,13 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
-import 'package:network_info_plus/network_info_plus.dart';
-import 'package:wifi_scan/wifi_scan.dart';
+import 'package:flutter/foundation.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import '../models/device.dart';
 import '../models/sync_status.dart';
+import '../services/database_service.dart';
 import '../utils/constants.dart';
 
 class P2PService {
-  // Singleton pattern
   static final P2PService _instance = P2PService._internal();
   factory P2PService() => _instance;
   P2PService._internal();
@@ -18,41 +16,53 @@ class P2PService {
   final StreamController<List<Device>> _devicesController = StreamController<List<Device>>.broadcast();
   final StreamController<SyncStatus> _syncStatusController = StreamController<SyncStatus>.broadcast();
   final StreamController<String> _connectionStatusController = StreamController<String>.broadcast();
-  final StreamController<Map<String, dynamic>> _dataReceivedController = StreamController<Map<String, dynamic>>.broadcast();
 
   // Streams for UI updates
   Stream<List<Device>> get devicesStream => _devicesController.stream;
   Stream<SyncStatus> get syncStatusStream => _syncStatusController.stream;
   Stream<String> get connectionStatusStream => _connectionStatusController.stream;
-  Stream<Map<String, dynamic>> get dataReceivedStream => _dataReceivedController.stream;
 
   // State management
   List<Device> _discoveredDevices = [];
   Device? _currentDevice;
-  String? _connectedDeviceId;
-  bool _isAdvertising = false;
+  Device? _connectedPC;
+  final bool _isAdvertising = false;
   bool _isDiscovering = false;
   Timer? _syncTimer;
   Timer? _discoveryTimer;
+  
+  // Database service
+  late DatabaseService _database;
+  
+  // Configuration
+  static const Duration _discoveryInterval = Duration(seconds: 10);
+  static const Duration _syncInterval = Duration(seconds: 30);
 
   // Getters
   List<Device> get discoveredDevices => List.unmodifiable(_discoveredDevices);
   Device? get currentDevice => _currentDevice;
-  String? get connectedDeviceId => _connectedDeviceId;
+  Device? get connectedPC => _connectedPC;
   bool get isAdvertising => _isAdvertising;
   bool get isDiscovering => _isDiscovering;
+  bool get isConnected => _connectedPC != null;
 
-  Future<void> initialize() async {
+  Future<void> initialize(DatabaseService database) async {
     try {
+      _database = database;
+      
       // Initialize current device
       await _initializeCurrentDevice();
       
       // Set up connectivity monitoring
       _setupConnectivityMonitoring();
       
-      print('✅ P2P Service initialized successfully (Mock Mode)');
+      if (AppConstants.enableDebugLogs) {
+        debugPrint('✅ P2P Service initialized successfully');
+      }
     } catch (e) {
-      print('❌ P2P Service initialization failed: $e');
+      if (AppConstants.enableDebugLogs) {
+        debugPrint('❌ P2P Service initialization failed: $e');
+      }
       rethrow;
     }
   }
@@ -70,24 +80,37 @@ class P2PService {
         platform: Platform.isAndroid ? 'Android' : 'iOS',
         isConnected: false,
         lastSeen: DateTime.now(),
+        deviceType: 'mobile',
+        capabilities: ['exhibit_upload', 'p2p_sync', 'database_client'],
+        connectionType: 'wifi',
+        isOnline: true,
       );
       
-      print('📱 Current device initialized: ${_currentDevice!.name}');
+      if (AppConstants.enableDebugLogs) {
+        debugPrint('📱 Current device initialized: ${_currentDevice!.name}');
+      }
     } catch (e) {
-      print('❌ Failed to initialize current device: $e');
+      if (AppConstants.enableDebugLogs) {
+        debugPrint('❌ Failed to initialize current device: $e');
+      }
       rethrow;
     }
   }
 
   Future<String> _generateDeviceId() async {
-    // Generate a unique device ID based on device info
-    final deviceInfo = await _getDeviceInfo();
-    return 'ucost_${deviceInfo.hashCode}_${DateTime.now().millisecondsSinceEpoch}';
+    // Simple device ID generation
+    return 'mobile_${DateTime.now().millisecondsSinceEpoch}';
   }
 
   Future<String> _getDeviceName() async {
     try {
-      return Platform.isAndroid ? 'Android Device' : 'iOS Device';
+      if (Platform.isAndroid) {
+        return 'Android Device';
+      } else if (Platform.isIOS) {
+        return 'iOS Device';
+      } else {
+        return 'Mobile Device';
+      }
     } catch (e) {
       return 'Unknown Device';
     }
@@ -95,296 +118,251 @@ class P2PService {
 
   Future<String> _getDeviceIP() async {
     try {
-      final networkInfo = NetworkInfo();
-      return await networkInfo.getWifiIP() ?? 'Unknown';
+      final interfaces = await NetworkInterface.list();
+      for (final interface in interfaces) {
+        if (interface.name.toLowerCase().contains('wlan') || 
+            interface.name.toLowerCase().contains('wifi')) {
+          for (final addr in interface.addresses) {
+            if (addr.type == InternetAddressType.IPv4 && 
+                !addr.address.startsWith('127.')) {
+              return addr.address;
+            }
+          }
+        }
+      }
+      return '127.0.0.1';
     } catch (e) {
-      return 'Unknown';
+      return '127.0.0.1';
     }
-  }
-
-  Future<Map<String, dynamic>> _getDeviceInfo() async {
-    return {
-      'platform': Platform.operatingSystem,
-      'version': Platform.operatingSystemVersion,
-    };
   }
 
   void _setupConnectivityMonitoring() {
     Connectivity().onConnectivityChanged.listen((ConnectivityResult result) {
       if (result == ConnectivityResult.wifi) {
-        _onWifiConnected();
+        startDiscovery();
       } else {
-        _onWifiDisconnected();
+        stopDiscovery();
       }
     });
   }
 
-  void _onWifiConnected() {
-    print('📶 WiFi connected - starting P2P services');
-    startAdvertising();
-    startDiscovery();
-  }
-
-  void _onWifiDisconnected() {
-    print('📶 WiFi disconnected - stopping P2P services');
-    stopAdvertising();
-    stopDiscovery();
-  }
-
-  // Mock Advertising (Making this device discoverable)
-  Future<void> startAdvertising() async {
-    if (_isAdvertising) return;
-    
-    try {
-      // Simulate advertising
-      await Future.delayed(const Duration(milliseconds: 500));
-      
-      _isAdvertising = true;
-      _connectionStatusController.add('Advertising started (Mock)');
-      print('📡 Started advertising as: ${_currentDevice!.name} (Mock)');
-    } catch (e) {
-      print('❌ Failed to start advertising: $e');
-      rethrow;
-    }
-  }
-
-  Future<void> stopAdvertising() async {
-    if (!_isAdvertising) return;
-    
-    try {
-      _isAdvertising = false;
-      _connectionStatusController.add('Advertising stopped');
-      print('📡 Stopped advertising');
-    } catch (e) {
-      print('❌ Failed to stop advertising: $e');
-    }
-  }
-
-  // Mock Discovery (Finding other devices)
   Future<void> startDiscovery() async {
     if (_isDiscovering) return;
     
     try {
       _isDiscovering = true;
-      _connectionStatusController.add('Discovery started (Mock)');
-      print('🔍 Started discovering devices (Mock)');
+      _discoveryTimer = Timer.periodic(_discoveryInterval, (_) => _discoverDevices());
       
-      // Start periodic discovery simulation
-      _discoveryTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
-        _simulateDeviceDiscovery();
-      });
+      if (AppConstants.enableDebugLogs) {
+        debugPrint('🔍 Started device discovery');
+      }
     } catch (e) {
-      print('❌ Failed to start discovery: $e');
-      rethrow;
+      _isDiscovering = false;
+      if (AppConstants.enableDebugLogs) {
+        debugPrint('❌ Failed to start discovery: $e');
+      }
     }
   }
 
   Future<void> stopDiscovery() async {
-    if (!_isDiscovering) return;
+    _isDiscovering = false;
+    _discoveryTimer?.cancel();
     
-    try {
-      _discoveryTimer?.cancel();
-      _isDiscovering = false;
-      _connectionStatusController.add('Discovery stopped');
-      print('🔍 Stopped discovering devices');
-    } catch (e) {
-      print('❌ Failed to stop discovery: $e');
+    if (AppConstants.enableDebugLogs) {
+      debugPrint('🛑 Stopped device discovery');
     }
   }
 
-  void _simulateDeviceDiscovery() {
-    // Simulate discovering mock devices
-    final mockDevices = [
-      Device(
-        id: 'kiosk-1',
-        name: 'UCOST Kiosk 1',
-        ipAddress: '192.168.1.100',
-        platform: 'Android',
-        isConnected: false,
-        lastSeen: DateTime.now(),
-      ),
-      Device(
-        id: 'kiosk-2',
-        name: 'UCOST Kiosk 2',
-        ipAddress: '192.168.1.101',
-        platform: 'Android',
-        isConnected: false,
-        lastSeen: DateTime.now(),
-      ),
-      Device(
-        id: 'mobile-1',
-        name: 'Mobile Device 1',
-        ipAddress: '192.168.1.102',
-        platform: 'Android',
-        isConnected: false,
-        lastSeen: DateTime.now(),
-      ),
-    ];
-
-    // Randomly add/remove devices to simulate discovery
-    if (_discoveredDevices.isEmpty) {
-      _discoveredDevices.addAll(mockDevices);
-    } else {
-      // Simulate device coming and going
-      if (DateTime.now().millisecondsSinceEpoch % 10 == 0) {
-        _discoveredDevices.clear();
-        _discoveredDevices.addAll(mockDevices.take(2));
-      }
-    }
-    
-    _devicesController.add(_discoveredDevices);
-  }
-
-  // Mock Connection Management
-  Future<void> connectToDevice(String deviceId) async {
+  Future<void> _discoverDevices() async {
     try {
-      print('🔗 Requesting connection to: $deviceId (Mock)');
-      
-      // Simulate connection delay
-      await Future.delayed(const Duration(seconds: 2));
-      
-      final device = _discoveredDevices.firstWhere(
-        (d) => d.id == deviceId,
-        orElse: () => Device(
-          id: deviceId,
-          name: 'Unknown Device',
-          ipAddress: 'Unknown',
-          platform: 'Unknown',
+      // Simulate device discovery for demo purposes
+      // In a real implementation, this would use mDNS or other discovery protocols
+      final mockDevices = [
+        Device(
+          id: 'pc_001',
+          name: 'UCOST PC Server',
+          ipAddress: '192.168.1.100',
+          platform: 'Windows',
           isConnected: false,
           lastSeen: DateTime.now(),
+          deviceType: 'pc',
+          capabilities: ['database_server', 'p2p_sync'],
+          connectionType: 'wifi',
+          isOnline: true,
         ),
-      );
+      ];
       
-      _connectedDeviceId = deviceId;
+      _discoveredDevices = mockDevices;
+      _devicesController.add(_discoveredDevices);
+      
+      if (AppConstants.enableDebugLogs) {
+        debugPrint('📡 Discovered ${_discoveredDevices.length} devices');
+      }
+    } catch (e) {
+      if (AppConstants.enableDebugLogs) {
+        debugPrint('❌ Device discovery failed: $e');
+      }
+    }
+  }
+
+  Future<void> connectToDevice(Device device) async {
+    try {
+      _connectedPC = device;
       _connectionStatusController.add('Connected to ${device.name}');
       
-      // Start periodic sync
-      _startPeriodicSync();
+      // Start automatic sync
+      _startAutoSync();
       
-      print('🔗 Connected to device: ${device.name}');
+      if (AppConstants.enableDebugLogs) {
+        debugPrint('🔗 Connected to device: ${device.name}');
+      }
     } catch (e) {
-      print('❌ Failed to request connection: $e');
+      if (AppConstants.enableDebugLogs) {
+        debugPrint('❌ Connection failed: $e');
+      }
       rethrow;
     }
   }
 
-  Future<void> disconnectFromDevice() async {
-    if (_connectedDeviceId != null) {
-      try {
-        _connectedDeviceId = null;
-        _connectionStatusController.add('Disconnected');
-        
-        // Stop periodic sync
-        _stopPeriodicSync();
-        
-        print('🔗 Disconnected from device');
-      } catch (e) {
-        print('❌ Failed to disconnect: $e');
-      }
-    }
-  }
-
-  // Mock Data Transfer
-  Future<void> sendData(String endpointId, Map<String, dynamic> data) async {
+  Future<void> disconnect() async {
     try {
-      // Simulate data transfer
-      await Future.delayed(const Duration(milliseconds: 500));
+      _stopAutoSync();
+      _connectedPC = null;
+      _connectionStatusController.add('Disconnected');
       
-      print('📤 Sent data to: $endpointId (Mock)');
-      
-      // Simulate receiving response
-      await Future.delayed(const Duration(milliseconds: 300));
-      _dataReceivedController.add({
-        'type': 'response',
-        'from': endpointId,
-        'data': {'status': 'received'},
-      });
+      if (AppConstants.enableDebugLogs) {
+        debugPrint('🔌 Disconnected from device');
+      }
     } catch (e) {
-      print('❌ Failed to send data: $e');
-      rethrow;
+      if (AppConstants.enableDebugLogs) {
+        debugPrint('❌ Disconnect failed: $e');
+      }
     }
   }
 
-  Future<void> sendExhibitSync(String endpointId, Map<String, dynamic> exhibitData) async {
-    final data = {
-      'type': 'exhibit_sync',
-      'timestamp': DateTime.now().toIso8601String(),
-      'data': exhibitData,
-    };
-    
-    await sendData(endpointId, data);
+  void _startAutoSync() {
+    _syncTimer = Timer.periodic(_syncInterval, (_) => _performSync());
   }
 
-  Future<void> sendStatusUpdate(String endpointId, SyncStatus status) async {
-    final data = {
-      'type': 'status_update',
-      'timestamp': DateTime.now().toIso8601String(),
-      'status': status.toJson(),
-    };
-    
-    await sendData(endpointId, data);
-  }
-
-  // Periodic Sync
-  void _startPeriodicSync() {
+  void _stopAutoSync() {
     _syncTimer?.cancel();
-    _syncTimer = Timer.periodic(P2PConfig.syncInterval, (timer) {
-      if (_connectedDeviceId != null) {
-        _performPeriodicSync();
-      }
-    });
   }
 
-  void _stopPeriodicSync() {
+  Future<void> startSync() async {
+    await _performSync();
+  }
+
+  Future<void> stopSync() async {
     _syncTimer?.cancel();
-    _syncTimer = null;
   }
 
-  Future<void> _performPeriodicSync() async {
+  Future<void> _performSync() async {
+    if (_connectedPC == null) return;
+    
     try {
-      final syncStatus = SyncStatus(
-        deviceId: _currentDevice!.id,
-        lastSync: DateTime.now(),
-        isOnline: true,
-        pendingUploads: 0,
-        pendingDownloads: 0,
+      // Get pending exhibits
+      final pendingExhibits = await _database.getPendingSyncExhibits();
+      
+      if (pendingExhibits.isEmpty) {
+        _syncStatusController.add(SyncStatus(
+          status: 'completed',
+          pendingCount: 0,
+          totalCount: 0,
+          syncedCount: 0,
+          timestamp: DateTime.now(),
+        ));
+        return;
+      }
+      
+      // Update sync status
+      _syncStatusController.add(SyncStatus(
+        status: 'syncing',
+        pendingCount: pendingExhibits.length,
+        totalCount: pendingExhibits.length,
+        syncedCount: 0,
+        timestamp: DateTime.now(),
+      ));
+      
+      // Simulate sync process
+      int syncedCount = 0;
+      for (final exhibit in pendingExhibits) {
+        try {
+          // Simulate API call to PC server
+          await Future.delayed(const Duration(milliseconds: 100));
+          
+          // Update exhibit sync status
+          await _database.updateExhibitSyncStatus(exhibit.id, 'completed');
+          syncedCount++;
+          
+          // Update progress
+          _syncStatusController.add(SyncStatus(
+            status: 'syncing',
+            pendingCount: pendingExhibits.length - syncedCount,
+            totalCount: pendingExhibits.length,
+            syncedCount: syncedCount,
+            timestamp: DateTime.now(),
+          ));
+        } catch (e) {
+          await _database.updateExhibitSyncStatus(exhibit.id, 'failed');
+          if (AppConstants.enableDebugLogs) {
+            debugPrint('❌ Failed to sync exhibit ${exhibit.id}: $e');
+          }
+        }
+      }
+      
+      // Final sync status
+      _syncStatusController.add(SyncStatus(
+        status: 'completed',
+        pendingCount: 0,
+        totalCount: pendingExhibits.length,
+        syncedCount: syncedCount,
+        timestamp: DateTime.now(),
+      ));
+      
+      if (AppConstants.enableDebugLogs) {
+        debugPrint('✅ Sync completed: $syncedCount/${pendingExhibits.length} exhibits');
+      }
+    } catch (e) {
+      _syncStatusController.add(SyncStatus(
+        status: 'failed',
+        pendingCount: 0,
+        totalCount: 0,
+        syncedCount: 0,
+        timestamp: DateTime.now(),
+        errorMessage: e.toString(),
+      ));
+      
+      if (AppConstants.enableDebugLogs) {
+        debugPrint('❌ Sync failed: $e');
+      }
+    }
+  }
+
+  Future<SyncStatus?> getCurrentSyncStatus() async {
+    try {
+      final pendingCount = await _database.getPendingSyncCount();
+      final totalCount = await _database.getExhibitCount();
+      
+      return SyncStatus(
+        status: pendingCount > 0 ? 'pending' : 'completed',
+        pendingCount: pendingCount,
+        totalCount: totalCount,
+        syncedCount: totalCount - pendingCount,
+        timestamp: DateTime.now(),
       );
-      
-      await sendStatusUpdate(_connectedDeviceId!, syncStatus);
-      _syncStatusController.add(syncStatus);
     } catch (e) {
-      print('❌ Periodic sync failed: $e');
-    }
-  }
-
-  // WiFi Network Scanning
-  Future<List<WiFiAccessPoint>> scanWiFiNetworks() async {
-    try {
-      final canGetScannedResults = await WiFiScan.instance.canGetScannedResults();
-      
-      if (canGetScannedResults == CanGetScannedResults.yes) {
-        final results = await WiFiScan.instance.getScannedResults();
-        return results;
-      } else {
-        print('⚠️ Cannot get scanned results');
-        return [];
+      if (AppConstants.enableDebugLogs) {
+        debugPrint('❌ Failed to get sync status: $e');
       }
-    } catch (e) {
-      print('❌ WiFi scan failed: $e');
-      return [];
+      return null;
     }
   }
 
-  // Cleanup
   void dispose() {
-    stopAdvertising();
-    stopDiscovery();
-    disconnectFromDevice();
-    _stopPeriodicSync();
-    
+    _discoveryTimer?.cancel();
+    _syncTimer?.cancel();
     _devicesController.close();
     _syncStatusController.close();
     _connectionStatusController.close();
-    _dataReceivedController.close();
   }
 } 

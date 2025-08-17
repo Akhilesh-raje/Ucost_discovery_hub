@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../utils/constants.dart';
 
 class StatsCard extends StatelessWidget {
   final String title;
@@ -19,64 +18,52 @@ class StatsCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-      ),
       child: Container(
-        padding: const EdgeInsets.all(AppSizes.paddingMedium),
+        padding: const EdgeInsets.all(16.0),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+          borderRadius: BorderRadius.circular(12),
           gradient: LinearGradient(
+            colors: [
+              color.withValues(alpha: 0.1),
+              color.withValues(alpha: 0.05),
+            ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              color.withOpacity(0.1),
-              color.withOpacity(0.05),
-            ],
           ),
         ),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: color.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
-                  ),
-                  child: Icon(
-                    icon,
-                    color: color,
-                    size: 20,
-                  ),
-                ),
-                const Spacer(),
-                Icon(
-                  Icons.trending_up,
-                  color: color.withOpacity(0.6),
-                  size: 16,
-                ),
-              ],
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                icon,
+                size: 32,
+                color: color,
+              ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
             Text(
               value,
-              style: TextStyle(
-                fontSize: 24,
+              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: color,
               ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 8),
             Text(
               title,
-              style: TextStyle(
-                fontSize: 14,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: Colors.grey[600],
                 fontWeight: FontWeight.w500,
               ),
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),

@@ -153,3 +153,99 @@ class NetworkConfig {
   static const int maxRetries = 3;
   static const Duration retryDelay = Duration(seconds: 2);
 } 
+
+class AppConstants {
+  // App Information
+  static const String appName = 'UCOST Mobile Admin';
+  static const String appVersion = '1.0.0';
+  static const String appDescription = 'World-Class Museum Management System';
+  
+  // API Configuration
+  static const String baseUrl = 'http://localhost:5000';
+  static const String apiVersion = '/api';
+  static const Duration apiTimeout = Duration(seconds: 30);
+  
+  // P2P Configuration
+  static const String serviceType = '_ucost-sync._tcp';
+  static const String serviceName = 'UCOST-Mobile-App';
+  static const Duration discoveryInterval = Duration(seconds: 10);
+  static const Duration syncInterval = Duration(seconds: 30);
+  static const Duration connectionTimeout = Duration(seconds: 15);
+  
+  // Database Configuration
+  static const String databaseName = 'ucost_exhibits.db';
+  static const int databaseVersion = 1;
+  
+  // Storage Configuration
+  static const String imageDirectory = 'exhibit_images';
+  static const int maxImageSize = 10 * 1024 * 1024; // 10MB
+  static const List<String> supportedImageFormats = ['jpg', 'jpeg', 'png', 'webp'];
+  
+  // UI Configuration
+  static const Duration animationDuration = Duration(milliseconds: 300);
+  static const Duration snackbarDuration = Duration(seconds: 3);
+  static const double defaultPadding = 16.0;
+  static const double defaultRadius = 12.0;
+  
+  // Sync Configuration
+  static const int maxRetryAttempts = 3;
+  static const Duration retryDelay = Duration(seconds: 5);
+  static const List<String> syncStatuses = ['pending', 'syncing', 'completed', 'failed'];
+  
+  // Exhibit Categories
+  static const List<String> exhibitCategories = [
+    'Science',
+    'Technology',
+    'History',
+    'Art',
+    'Nature',
+    'Space',
+    'Innovation',
+    'Education',
+    'Interactive',
+    'Temporary',
+    'Permanent',
+    'Special',
+  ];
+  
+  // Exhibit Locations
+  static const List<String> exhibitLocations = [
+    'Ground Floor',
+    'First Floor',
+    'Second Floor',
+    'Basement',
+    'Outdoor',
+    'Special Gallery',
+    'Main Hall',
+    'Science Lab',
+    'Technology Zone',
+    'History Section',
+    'Art Gallery',
+    'Nature Corner',
+  ];
+  
+  // Error Messages
+  static const String networkError = 'Network connection error. Please check your internet connection.';
+  static const String databaseError = 'Database operation failed. Please try again.';
+  static const String syncError = 'Synchronization failed. Please check your connection.';
+  static const String uploadError = 'Upload failed. Please try again.';
+  static const String generalError = 'Something went wrong. Please try again.';
+  
+  // Success Messages
+  static const String syncSuccess = 'Data synchronized successfully!';
+  static const String uploadSuccess = 'Exhibit uploaded successfully!';
+  static const String deleteSuccess = 'Exhibit deleted successfully!';
+  static const String updateSuccess = 'Exhibit updated successfully!';
+  
+  // Validation Messages
+  static const String nameRequired = 'Exhibit name is required';
+  static const String descriptionRequired = 'Exhibit description is required';
+  static const String categoryRequired = 'Please select a category';
+  static const String locationRequired = 'Please select a location';
+  static const String imageRequired = 'At least one image is required';
+  
+  // Debug Configuration
+  static const bool enableDebugLogs = true;
+  static const bool enablePerformanceLogs = false;
+  static const bool enableNetworkLogs = true;
+} 

@@ -282,6 +282,7 @@ router.post('/reset-credentials', async (req, res) => {
           email: true,
           password: true,
           role: true,
+          isActive: true,
           createdAt: true,
           updatedAt: true
         }
@@ -300,6 +301,7 @@ router.post('/reset-credentials', async (req, res) => {
           email: true,
           password: true,
           role: true,
+          isActive: true,
           createdAt: true,
           updatedAt: true
         }
@@ -326,62 +328,125 @@ router.post('/logout', (req, res) => {
 });
 
 // UCOST Software Verification endpoint
-router.post('/verify-ucost', async (req, res) => {
+router.post('/verify-ucost', async (req: any, res: any) => {
   try {
     const { softwareId, version, deviceId, capabilities } = req.body;
     const softwareIdHeader = req.headers['x-ucost-software-id'];
     const versionHeader = req.headers['x-ucost-version'];
     const deviceIdHeader = req.headers['x-ucost-device-id'];
 
-    // Verify this is legitimate UCOST Discovery Hub software
-    const validSoftwareId = 'UCOST_DISCOVERY_HUB';
-    const validVersion = '1.0.0';
+    console.log('🔍 P2P Device Verification Request:', {
+      softwareId,
+      version,
+      deviceId,
+      capabilities,
+      headers: {
+        softwareIdHeader,
+        versionHeader,
+        deviceIdHeader
+      }
+    });
 
-    if (softwareId !== validSoftwareId || 
-        softwareIdHeader !== validSoftwareId ||
-        version !== validVersion ||
-        versionHeader !== validVersion) {
+    // Verify software ID
+    if (softwareId !== 'UCOST_DISCOVERY_HUB' || softwareIdHeader !== 'UCOST_DISCOVERY_HUB') {
+      console.log('❌ Unauthorized software ID:', softwareId);
       return res.status(401).json({
+        success: false,
         isAuthorized: false,
-        reason: 'Invalid software credentials'
+        error: 'Unauthorized software'
       });
     }
 
-    // Verify device ID is present
+    // Verify version compatibility (basic check)
+    if (!version || !versionHeader) {
+      console.log('❌ Missing version information');
+      return res.status(400).json({
+        success: false,
+        isAuthorized: false,
+        error: 'Missing version information'
+      });
+    }
+
+    // Verify device ID
     if (!deviceId || !deviceIdHeader) {
-      return res.status(401).json({
+      console.log('❌ Missing device ID');
+      return res.status(400).json({
+        success: false,
         isAuthorized: false,
-        reason: 'Missing device identification'
+        error: 'Missing device ID'
       });
     }
 
-    // Verify capabilities are valid
-    const validCapabilities = ['exhibits', 'tours', 'analytics'];
-    const hasValidCapabilities = capabilities && 
-      capabilities.some((cap: string) => validCapabilities.includes(cap));
-
-    if (!hasValidCapabilities) {
-      return res.status(401).json({
+    // Verify capabilities
+    if (!capabilities || !Array.isArray(capabilities)) {
+      console.log('❌ Invalid capabilities');
+      return res.status(400).json({
+        success: false,
         isAuthorized: false,
-        reason: 'Invalid device capabilities'
+        error: 'Invalid capabilities'
       });
     }
 
-    // All checks passed - this is authorized UCOST software
+    // All checks passed - device is authorized
+    console.log('✅ P2P Device Authorized:', {
+      deviceId,
+      version,
+      capabilities
+    });
+
     res.json({
+      success: true,
       isAuthorized: true,
-      softwareId: validSoftwareId,
-      version: validVersion,
-      deviceId: deviceIdHeader,
-      capabilities: validCapabilities,
+      softwareId: 'UCOST_DISCOVERY_HUB',
+      version: '1.0.0',
+      message: 'Device verified successfully',
+      serverCapabilities: ['exhibits', 'tours', 'analytics', 'admin'],
       timestamp: new Date().toISOString()
     });
 
-  } catch (error) {
-    console.error('UCOST verification error:', error);
+  } catch (error: any) {
+    console.error('❌ P2P Verification Error:', error);
     res.status(500).json({
+      success: false,
       isAuthorized: false,
-      reason: 'Internal server error'
+      error: 'Verification failed'
+    });
+  }
+});
+
+// System Information Endpoint for P2P
+router.get('/system/local-ip', async (req: any, res: any) => {
+  try {
+    // Get actual local IP address
+    const os = require('os');
+    const interfaces = os.networkInterfaces();
+    let localIP = '127.0.0.1'; // Default fallback
+    
+    // Find the first non-internal IPv4 address
+    for (const name of Object.keys(interfaces)) {
+      for (const iface of interfaces[name]) {
+        // Skip internal (i.e. 127.0.0.1) and non-IPv4 addresses
+        if (iface.family === 'IPv4' && !iface.internal) {
+          localIP = iface.address;
+          break;
+        }
+      }
+      if (localIP !== '127.0.0.1') break;
+    }
+    
+    console.log('🌐 Local IP detected:', localIP);
+    
+    res.json({
+      success: true,
+      ip: localIP,
+      networkInterfaces: Object.keys(interfaces),
+      timestamp: new Date().toISOString()
+    });
+  } catch (error: any) {
+    console.error('❌ Local IP Error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get local IP'
     });
   }
 });

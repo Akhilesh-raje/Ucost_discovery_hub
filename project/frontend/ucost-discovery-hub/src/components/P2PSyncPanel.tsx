@@ -1,40 +1,42 @@
 import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { Switch } from '@/components/ui/switch';
-import { Input } from '@/components/ui/input';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Switch } from './ui/switch';
+import { Progress } from './ui/progress';
+import { Badge } from './ui/badge';
 import { 
+  ArrowLeft, 
   Wifi, 
-  Users, 
-  ArrowLeft,
-  RefreshCw,
-  CheckCircle,
-  XCircle,
-  Plus,
-  Copy,
+  Smartphone, 
+  Monitor, 
+  RefreshCw, 
+  Link, 
+  Link2, 
+  Copy, 
+  CheckCircle, 
+  AlertCircle,
+  Loader2,
   Shield,
-  AlertTriangle
+  Users,
+  Database
 } from 'lucide-react';
+import { useToast } from '../hooks/use-toast';
 
 interface SimpleDevice {
   id: string;
   name: string;
   ip: string;
+  port: number;
   isConnected: boolean;
   lastSync?: string;
+  capabilities: string[];
   isAuthorized: boolean;
   softwareVersion: string;
   deviceType: 'kiosk' | 'mobile' | 'desktop';
 }
 
-interface P2PSyncPanelProps {
-  onBack: () => void;
-}
-
-export default function P2PSyncPanel({ onBack }: P2PSyncPanelProps) {
+export default function P2PSyncPanel({ onBack }: { onBack: () => void }) {
   const [isEnabled, setIsEnabled] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
   const [peers, setPeers] = useState<SimpleDevice[]>([]);
@@ -43,53 +45,118 @@ export default function P2PSyncPanel({ onBack }: P2PSyncPanelProps) {
   const [myIP, setMyIP] = useState('192.168.1.100');
   const [manualIP, setManualIP] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
+  const { toast } = useToast();
 
-  // Auto-start scanning when enabled
+  // Get local IP address
   useEffect(() => {
-    if (isEnabled) {
-      startScanning();
-    }
-  }, [isEnabled]);
+    getLocalIP();
+  }, []);
 
-  const startScanning = () => {
+  const getLocalIP = async () => {
+    try {
+      setMyIP('Detecting...');
+      const response = await fetch('/api/auth/system/local-ip');
+      if (response.ok) {
+        const data = await response.json();
+        setMyIP(data.ip);
+        console.log('🌐 Local IP detected:', data.ip);
+        
+        // Show success toast
+        toast({
+          title: "IP Address Detected",
+          description: `Your device IP: ${data.ip}`,
+        });
+      } else {
+        throw new Error('Failed to get IP');
+      }
+    } catch (error) {
+      console.log('❌ IP detection failed, using fallback');
+      setMyIP('192.168.1.100'); // Fallback IP
+      
+      toast({
+        title: "IP Detection Failed",
+        description: "Using fallback IP address",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const refreshIP = async () => {
+    await getLocalIP();
+  };
+
+  const startScanning = async () => {
+    if (!isEnabled) return;
+    
     setIsScanning(true);
     setErrorMessage('');
+    setSuccessMessage('');
     
-    // Simulate finding authorized UCOST devices only
-    setTimeout(() => {
-      const foundPeers: SimpleDevice[] = [
-        {
-          id: '1',
-          name: 'Kiosk 1 - Main Entrance',
-          ip: '192.168.1.101',
-          isConnected: false,
-          isAuthorized: true,
-          softwareVersion: '1.0.0',
-          deviceType: 'kiosk'
-        },
-        {
-          id: '2', 
-          name: 'Kiosk 2 - Science Wing',
-          ip: '192.168.1.102',
-          isConnected: false,
-          isAuthorized: true,
-          softwareVersion: '1.0.0',
-          deviceType: 'kiosk'
-        },
-        {
-          id: '3',
-          name: 'Mobile Device - Staff',
-          ip: '192.168.1.103',
-          isConnected: false,
-          isAuthorized: true,
-          softwareVersion: '1.0.0',
-          deviceType: 'mobile'
-        }
-      ];
-      
-      setPeers(foundPeers);
+    try {
+      // Simulate finding authorized UCOST devices
+      // In production, this would call the actual P2P discovery API
+      setTimeout(() => {
+        const foundPeers: SimpleDevice[] = [
+          {
+            id: '1',
+            name: 'Kiosk 1 - Main Entrance',
+            ip: '192.168.1.101',
+            port: 5000,
+            isConnected: false,
+            isAuthorized: true,
+            softwareVersion: '1.0.0',
+            deviceType: 'kiosk',
+            capabilities: ['exhibits', 'tours', 'analytics']
+          },
+          {
+            id: '2', 
+            name: 'Kiosk 2 - Science Wing',
+            ip: '192.168.1.102',
+            port: 5000,
+            isConnected: false,
+            isAuthorized: true,
+            softwareVersion: '1.0.0',
+            deviceType: 'kiosk',
+            capabilities: ['exhibits', 'tours', 'analytics']
+          },
+          {
+            id: '3',
+            name: 'Mobile Device - Staff',
+            ip: '192.168.1.103',
+            port: 5000,
+            isConnected: false,
+            isAuthorized: true,
+            softwareVersion: '1.0.0',
+            deviceType: 'mobile',
+            capabilities: ['exhibits', 'tours', 'analytics']
+          },
+          {
+            id: '4',
+            name: 'Admin Desktop - Office',
+            ip: '192.168.1.104',
+            port: 5000,
+            isConnected: false,
+            isAuthorized: true,
+            softwareVersion: '1.0.0',
+            deviceType: 'desktop',
+            capabilities: ['exhibits', 'tours', 'analytics', 'admin']
+          }
+        ];
+        
+        setPeers(foundPeers);
+        setIsScanning(false);
+        setSuccessMessage(`Found ${foundPeers.length} authorized UCOST devices`);
+        
+        toast({
+          title: "Device Discovery Complete",
+          description: `Found ${foundPeers.length} authorized devices on the network`,
+        });
+      }, 3000);
+    } catch (error) {
+      setErrorMessage('Failed to scan for devices');
       setIsScanning(false);
-    }, 3000);
+    }
   };
 
   const connectToDevice = async (peerId: string) => {
@@ -99,19 +166,34 @@ export default function P2PSyncPanel({ onBack }: P2PSyncPanelProps) {
       return;
     }
 
-    // Simulate connection verification
-    setPeers(prev => prev.map(p => 
-      p.id === peerId ? { ...p, isConnected: true } : p
-    ));
+    try {
+      // Simulate connection verification
+      setPeers(prev => prev.map(p => 
+        p.id === peerId ? { ...p, isConnected: true } : p
+      ));
+      
+      setSuccessMessage(`Connected to ${peer.name}`);
+      toast({
+        title: "Device Connected",
+        description: `Successfully connected to ${peer.name}`,
+      });
+    } catch (error) {
+      setErrorMessage(`Failed to connect to ${peer.name}`);
+    }
   };
 
   const disconnectFromDevice = (peerId: string) => {
     setPeers(prev => prev.map(p => 
       p.id === peerId ? { ...p, isConnected: false } : p
     ));
+    
+    const peer = peers.find(p => p.id === peerId);
+    if (peer) {
+      setSuccessMessage(`Disconnected from ${peer.name}`);
+    }
   };
 
-  const syncAllDevices = () => {
+  const syncAllDevices = async () => {
     const connectedPeers = peers.filter(p => p.isConnected && p.isAuthorized);
     if (connectedPeers.length === 0) {
       setErrorMessage('No authorized devices connected');
@@ -121,325 +203,392 @@ export default function P2PSyncPanel({ onBack }: P2PSyncPanelProps) {
     setIsSyncing(true);
     setSyncProgress(0);
     setErrorMessage('');
+    setSuccessMessage('');
     
-    const interval = setInterval(() => {
-      setSyncProgress(prev => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          setIsSyncing(false);
-          
-          // Update last sync time
-          setPeers(prev => prev.map(p => 
-            p.isConnected && p.isAuthorized ? { ...p, lastSync: new Date().toLocaleTimeString() } : p
-          ));
-          
-          return 100;
-        }
-        return prev + 20;
-      });
-    }, 200);
+    try {
+      // Simulate sync process
+      const interval = setInterval(() => {
+        setSyncProgress(prev => {
+          if (prev >= 100) {
+            clearInterval(interval);
+            setIsSyncing(false);
+            
+            // Update last sync time
+            setPeers(prev => prev.map(p => 
+              p.isConnected && p.isAuthorized ? { ...p, lastSync: new Date().toLocaleTimeString() } : p
+            ));
+            
+            setSuccessMessage(`Successfully synced with ${connectedPeers.length} devices`);
+            toast({
+              title: "Sync Complete",
+              description: `Successfully synchronized with ${connectedPeers.length} devices`,
+            });
+            
+            return 100;
+          }
+          return prev + 20;
+        });
+      }, 200);
+    } catch (error) {
+      setIsSyncing(false);
+      setErrorMessage('Sync failed');
+    }
   };
 
   const addManualDevice = async () => {
-    if (!manualIP.trim()) return;
-    
-    // Simulate verification - only authorized UCOST software can be added
-    const isAuthorized = manualIP.includes('192.168.1'); // Simple check for demo
-    
-    if (!isAuthorized) {
-      setErrorMessage('Device is not running UCOST Discovery Hub software');
+    if (!manualIP.trim()) {
+      setErrorMessage('Please enter a valid IP address');
       return;
     }
-    
-    const newPeer: SimpleDevice = {
-      id: Date.now().toString(),
-      name: `Manual Device - ${manualIP}`,
-      ip: manualIP,
-      isConnected: false,
-      isAuthorized: true,
-      softwareVersion: '1.0.0',
-      deviceType: 'desktop'
-    };
-    
-    setPeers(prev => [...prev, newPeer]);
-    setManualIP('');
-    setErrorMessage('');
+
+    try {
+      // Simulate manual device verification
+      const newDevice: SimpleDevice = {
+        id: `manual-${Date.now()}`,
+        name: `Manual Device - ${manualIP}`,
+        ip: manualIP,
+        port: 5000,
+        isConnected: false,
+        isAuthorized: true,
+        softwareVersion: '1.0.0',
+        deviceType: 'desktop',
+        capabilities: ['exhibits', 'tours', 'analytics']
+      };
+
+      setPeers(prev => [...prev, newDevice]);
+      setManualIP('');
+      setSuccessMessage(`Added manual device: ${manualIP}`);
+      
+      toast({
+        title: "Device Added",
+        description: `Successfully added manual device ${manualIP}`,
+      });
+    } catch (error) {
+      setErrorMessage('Failed to add manual device');
+    }
   };
 
-  const copyMyIP = () => {
+  const copyIP = () => {
     navigator.clipboard.writeText(myIP);
+    toast({
+      title: "IP Copied",
+      description: "IP address copied to clipboard",
+    });
   };
 
-  const getDeviceTypeIcon = (type: string) => {
-    switch (type) {
-      case 'kiosk': return '🖥️';
-      case 'mobile': return '📱';
-      case 'desktop': return '💻';
-      default: return '🖥️';
+  const getDeviceIcon = (deviceType: string) => {
+    switch (deviceType) {
+      case 'kiosk': return <Monitor className="h-4 w-4" />;
+      case 'mobile': return <Smartphone className="h-4 w-4" />;
+      case 'desktop': return <Monitor className="h-4 w-4" />;
+      default: return <Wifi className="h-4 w-4" />;
     }
   };
 
-  const getDeviceTypeColor = (type: string) => {
-    switch (type) {
-      case 'kiosk': return 'bg-blue-500';
-      case 'mobile': return 'bg-green-500';
-      case 'desktop': return 'bg-purple-500';
-      default: return 'bg-gray-500';
-    }
+  const getCapabilityBadges = (capabilities: string[]) => {
+    return capabilities.map(cap => (
+      <Badge key={cap} variant="secondary" className="text-xs">
+        {cap}
+      </Badge>
+    ));
   };
 
   return (
-    <div className="min-h-screen bg-gradient-cosmic p-6">
-      <div className="max-w-4xl mx-auto">
-        <div className="mb-8">
-          <Button variant="ghost" onClick={onBack} className="mb-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 p-6">
+      <div className="max-w-6xl mx-auto">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-white">P2P Network Sync</h1>
+            <p className="text-gray-300 mt-2">Connect and synchronize with other UCOST Discovery Hub devices</p>
+          </div>
+          <Button variant="outline" onClick={onBack} className="text-white border-gray-600 hover:bg-gray-800">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Admin Panel
           </Button>
-          
-          <h1 className="text-4xl font-bold mb-2">Device Sync</h1>
-          <p className="text-muted-foreground">Connect and sync with other UCOST Discovery Hub devices</p>
         </div>
 
-        {/* Security Notice */}
-        <Alert className="mb-6">
-          <Shield className="h-4 w-4" />
-          <AlertDescription>
-            Only devices running UCOST Discovery Hub software can connect and sync. 
-            Unauthorized devices will be automatically rejected.
-          </AlertDescription>
-        </Alert>
-
-        {/* Main Control */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-3">
-              <Wifi className="h-6 w-6 text-primary" />
-              Network Status
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <Switch 
-                  checked={isEnabled} 
-                  onCheckedChange={setIsEnabled}
-                />
-                <span className="font-medium">
-                  {isEnabled ? 'Device Sync Enabled' : 'Device Sync Disabled'}
-                </span>
-              </div>
-              
-              {isEnabled && (
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground">My IP:</span>
-                  <span className="font-mono text-sm">{myIP}</span>
-                  <Button variant="ghost" size="sm" onClick={copyMyIP}>
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                </div>
-              )}
-            </div>
-
-            {isEnabled && (
-              <div className="grid grid-cols-3 gap-4 text-center">
-                <div className="p-4 bg-green-50 rounded-lg">
-                  <div className="text-2xl font-bold text-green-600">
-                    {peers.filter(p => p.isConnected && p.isAuthorized).length}
+        {/* Main Content */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left Column - Device Sync Control */}
+          <div className="lg:col-span-1 space-y-6">
+            {/* Network Status */}
+            <Card className="bg-gray-800 border-gray-700 text-white">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-white">
+                  <Wifi className="h-5 w-5 text-blue-400" />
+                  Network Status
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-gray-300">Device IP Address</span>
+                    <div className="flex items-center gap-2">
+                      <div className={`w-2 h-2 rounded-full ${myIP !== 'Detecting...' && myIP !== '192.168.1.100' ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
+                      <span className="text-xs text-gray-400">
+                        {myIP === 'Detecting...' ? 'Detecting...' : 
+                         myIP === '192.168.1.100' ? 'Fallback' : 
+                         'Active'}
+                      </span>
+                    </div>
                   </div>
-                  <div className="text-sm text-muted-foreground">Connected</div>
-                </div>
-                <div className="p-4 bg-blue-50 rounded-lg">
-                  <div className="text-2xl font-bold text-blue-600">
-                    {peers.filter(p => p.isAuthorized).length}
+                  
+                  <div className="bg-gray-700 rounded-lg p-3 font-mono text-sm text-white">
+                    {myIP}
                   </div>
-                  <div className="text-sm text-muted-foreground">Authorized</div>
-                </div>
-                <div className="p-4 bg-purple-50 rounded-lg">
-                  <div className="text-2xl font-bold text-purple-600">
-                    {peers.filter(p => p.lastSync && p.isAuthorized).length}
+                  
+                  <div className="flex gap-2">
+                    <Button size="sm" variant="outline" onClick={copyIP} className="flex-1 text-white border-gray-600 hover:bg-gray-700">
+                      <Copy className="h-3 w-3 mr-1" />
+                      Copy IP
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={refreshIP} className="flex-1 text-white border-gray-600 hover:bg-gray-700">
+                      <RefreshCw className="h-3 w-3 mr-1" />
+                      Refresh
+                    </Button>
                   </div>
-                  <div className="text-sm text-muted-foreground">Synced</div>
                 </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Error Message */}
-        {errorMessage && (
-          <Alert className="mb-6" variant="destructive">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertDescription>{errorMessage}</AlertDescription>
-          </Alert>
-        )}
-
-        {/* Scan Button */}
-        {isEnabled && (
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-3">
-                <RefreshCw className={`h-6 w-6 ${isScanning ? 'animate-spin' : ''}`} />
-                Find Authorized Devices
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex gap-4">
-                <Button 
-                  onClick={startScanning}
-                  disabled={isScanning}
-                  className="flex items-center gap-2"
-                >
-                  <RefreshCw className="h-4 w-4" />
-                  {isScanning ? 'Scanning...' : 'Scan for Devices'}
-                </Button>
                 
-                <Button 
-                  onClick={syncAllDevices}
-                  disabled={isSyncing || peers.filter(p => p.isConnected && p.isAuthorized).length === 0}
-                  className="flex items-center gap-2"
-                >
-                  <CheckCircle className="h-4 w-4" />
-                  Sync All Connected
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+                <div className="pt-3 border-t border-gray-600">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-400">Network Status</span>
+                    <span className={`px-2 py-1 rounded-full text-xs ${
+                      myIP !== 'Detecting...' && myIP !== '192.168.1.100' 
+                        ? 'bg-green-900 text-green-300' 
+                        : 'bg-yellow-900 text-yellow-300'
+                    }`}>
+                      {myIP === 'Detecting...' ? 'Detecting' : 
+                       myIP === '192.168.1.100' ? 'Limited' : 
+                       'Connected'}
+                    </span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
-        {/* Sync Progress */}
-        {isSyncing && (
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-3">
-                <CheckCircle className="h-6 w-6 animate-pulse" />
-                Syncing Data
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Progress value={syncProgress} className="mb-2" />
-              <div className="flex justify-between text-sm text-muted-foreground">
-                <span>Syncing exhibits and tours with authorized devices...</span>
-                <span>{syncProgress}%</span>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+            {/* Device Sync Control */}
+            <Card className="bg-gray-800 border-gray-700 text-white">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-white">
+                  <Wifi className="h-5 w-5 text-green-400" />
+                  Device Sync Control
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-gray-300">Device Sync Enabled</span>
+                  <Switch
+                    checked={isEnabled}
+                    onCheckedChange={setIsEnabled}
+                  />
+                </div>
+                
+                {isEnabled && (
+                  <Button 
+                    onClick={startScanning} 
+                    disabled={isScanning}
+                    className="w-full"
+                  >
+                    {isScanning ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Scanning...
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCw className="mr-2 h-4 w-4" />
+                        Scan for Devices
+                      </>
+                    )}
+                  </Button>
+                )}
+              </CardContent>
+            </Card>
 
-        {/* Add Manual Device */}
-        {isEnabled && (
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-3">
-                <Plus className="h-6 w-6" />
-                Add Authorized Device Manually
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex gap-4">
-                <Input
-                  placeholder="Enter IP address of UCOST device (e.g., 192.168.1.100)"
-                  value={manualIP}
-                  onChange={(e) => setManualIP(e.target.value)}
-                  className="flex-1"
-                />
-                <Button onClick={addManualDevice} disabled={!manualIP.trim()}>
+            {/* Manual Device Entry */}
+            <Card className="bg-gray-800 border-gray-700 text-white">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-white">
+                  <Link className="h-5 w-5 text-blue-400" />
+                  Add Manual Device
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-300">Device IP Address</label>
+                  <Input
+                    placeholder="192.168.1.100"
+                    value={manualIP}
+                    onChange={(e) => setManualIP(e.target.value)}
+                    className="bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+                  />
+                </div>
+                <Button onClick={addManualDevice} className="w-full">
                   Add Device
                 </Button>
-              </div>
-              <p className="text-xs text-muted-foreground mt-2">
-                Only devices running UCOST Discovery Hub software will be accepted
-              </p>
-            </CardContent>
-          </Card>
-        )}
+              </CardContent>
+            </Card>
 
-        {/* Device List */}
-        {isEnabled && peers.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-3">
-                <Users className="h-6 w-6" />
-                Authorized Devices ({peers.filter(p => p.isAuthorized).length})
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {peers.filter(p => p.isAuthorized).map((peer) => (
-                  <div key={peer.id} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="flex items-center gap-4">
-                      <div className={`w-3 h-3 rounded-full ${peer.isConnected ? 'bg-green-500' : 'bg-gray-300'}`} />
-                      <div className="flex items-center gap-2">
-                        <span className="text-lg">{getDeviceTypeIcon(peer.deviceType)}</span>
-                        <div>
-                          <div className="font-medium">{peer.name}</div>
-                          <div className="text-sm text-muted-foreground">
-                            {peer.ip} • v{peer.softwareVersion} • {peer.deviceType}
-                            {peer.lastSync && ` • Last sync: ${peer.lastSync}`}
+            {/* Sync Control */}
+            <Card className="bg-gray-800 border-gray-700 text-white">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-white">
+                  <Database className="h-5 w-5 text-purple-400" />
+                  Sync Control
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Button 
+                  onClick={syncAllDevices}
+                  disabled={!peers.some(p => p.isConnected) || isSyncing}
+                  className="w-full"
+                >
+                  {isSyncing ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Syncing...
+                    </>
+                  ) : (
+                    <>
+                      <Link2 className="mr-2 h-4 w-4" />
+                      Sync All Connected
+                    </>
+                  )}
+                </Button>
+                
+                {isSyncing && (
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm text-gray-300">
+                      <span>Sync Progress</span>
+                      <span>{syncProgress}%</span>
+                    </div>
+                    <Progress value={syncProgress} className="w-full" />
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Right Column - Device List */}
+          <div className="lg:col-span-2">
+            <Card className="bg-gray-800 border-gray-700 text-white">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-white">
+                  <Users className="h-5 w-5 text-indigo-400" />
+                  Discovered Devices
+                  <Badge variant="secondary">{peers.length}</Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {isScanning && (
+                  <div className="text-center py-8">
+                    <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-blue-400" />
+                    <p className="text-gray-300">Scanning network for UCOST devices...</p>
+                  </div>
+                )}
+
+                {!isScanning && peers.length === 0 && (
+                  <div className="text-center py-8">
+                    <Wifi className="h-8 w-8 mx-auto mb-4 text-gray-400" />
+                    <p className="text-gray-300">No devices found</p>
+                    <p className="text-sm text-gray-400 mt-2">
+                      Enable device sync and scan for devices
+                    </p>
+                  </div>
+                )}
+
+                {!isScanning && peers.length > 0 && (
+                  <div className="space-y-4">
+                    {peers.map((peer) => (
+                      <div key={peer.id} className="border border-gray-600 rounded-lg p-4 bg-gray-700">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-3">
+                            {getDeviceIcon(peer.deviceType)}
+                            <div>
+                              <h3 className="font-medium text-white">{peer.name}</h3>
+                              <p className="text-sm text-gray-400">
+                                {peer.ip}:{peer.port} • v{peer.softwareVersion}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {peer.isAuthorized ? (
+                              <Badge variant="default" className="bg-green-900 text-green-300">
+                                <Shield className="h-3 w-3 mr-1" />
+                                Authorized
+                              </Badge>
+                            ) : (
+                              <Badge variant="destructive">
+                                <AlertCircle className="h-3 w-3 mr-1" />
+                                Unauthorized
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center justify-between">
+                          <div className="flex gap-2">
+                            {getCapabilityBadges(peer.capabilities)}
+                          </div>
+                          
+                          <div className="flex items-center gap-2">
+                            {peer.lastSync && (
+                              <span className="text-xs text-gray-400">
+                                Last sync: {peer.lastSync}
+                              </span>
+                            )}
+                            
+                            {peer.isConnected ? (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => disconnectFromDevice(peer.id)}
+                                className="text-red-400 border-red-600 hover:bg-red-900"
+                              >
+                                <Link2 className="h-4 w-4 mr-1" />
+                                Disconnect
+                              </Button>
+                            ) : (
+                              <Button
+                                size="sm"
+                                onClick={() => connectToDevice(peer.id)}
+                                disabled={!peer.isAuthorized}
+                              >
+                                <Link className="h-4 w-4 mr-1" />
+                                Connect
+                              </Button>
+                            )}
                           </div>
                         </div>
                       </div>
-                    </div>
-                    
-                    <div className="flex items-center gap-2">
-                      {peer.isConnected ? (
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => disconnectFromDevice(peer.id)}
-                        >
-                          <XCircle className="h-4 w-4 mr-1" />
-                          Disconnect
-                        </Button>
-                      ) : (
-                        <Button 
-                          size="sm"
-                          onClick={() => connectToDevice(peer.id)}
-                        >
-                          <CheckCircle className="h-4 w-4 mr-1" />
-                          Connect
-                        </Button>
-                      )}
-                    </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        {/* Messages */}
+        {errorMessage && (
+          <div className="fixed bottom-4 right-4 bg-red-900 border border-red-700 rounded-lg p-4 max-w-sm">
+            <div className="flex items-center gap-2 text-red-200">
+              <AlertCircle className="h-5 w-5" />
+              <span className="font-medium">Error</span>
+            </div>
+            <p className="text-red-300 text-sm mt-1">{errorMessage}</p>
+          </div>
         )}
 
-        {/* Simple Instructions */}
-        {isEnabled && (
-          <Card className="mt-6">
-            <CardHeader>
-              <CardTitle>How to Connect</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3 text-sm">
-                <div className="flex items-start gap-3">
-                  <div className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold">1</div>
-                  <div>
-                    <div className="font-medium">Enable Device Sync</div>
-                    <div className="text-muted-foreground">Turn on the switch above to start finding authorized UCOST devices</div>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold">2</div>
-                  <div>
-                    <div className="font-medium">Scan for Authorized Devices</div>
-                    <div className="text-muted-foreground">Click "Scan for Devices" to find other UCOST Discovery Hub software</div>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold">3</div>
-                  <div>
-                    <div className="font-medium">Connect & Sync</div>
-                    <div className="text-muted-foreground">Click "Connect" on any authorized device, then "Sync All Connected" to share data</div>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+        {successMessage && (
+          <div className="fixed bottom-4 right-4 bg-green-900 border border-green-700 rounded-lg p-4 max-w-sm">
+            <div className="flex items-center gap-2 text-green-200">
+              <CheckCircle className="h-5 w-5" />
+              <span className="font-medium">Success</span>
+            </div>
+            <p className="text-green-300 text-sm mt-1">{successMessage}</p>
+          </div>
         )}
       </div>
     </div>

@@ -15,10 +15,11 @@ router.post('/track', async (req, res) => {
 
     const analytics = await prisma.visitorAnalytics.create({
       data: {
-        sessionId,
-        userId: userId || null,
-        pageVisited,
-        timeSpent: timeSpent || 0
+        userId: sessionId,
+        page: pageVisited,
+        timeSpent: timeSpent || 0,
+        userAgent: req.headers['user-agent'] || null,
+        ipAddress: req.ip || null
       }
     });
 
@@ -48,7 +49,7 @@ router.get('/visitors', async (req, res) => {
 
     // Get total visitors
     const totalVisitors = await prisma.visitorAnalytics.groupBy({
-      by: ['sessionId'],
+      by: ['userId'],
       where: whereClause
     }).then((groups: any[]) => groups.length);
 
@@ -128,25 +129,25 @@ router.get('/page-stats', async (req, res) => {
 
     // Get page visit counts
     const pageStats = await prisma.visitorAnalytics.groupBy({
-      by: ['pageVisited'],
+      by: ['page'],
       where: whereClause,
       _count: {
-        pageVisited: true
+        page: true
       },
       _avg: {
         timeSpent: true
       },
       orderBy: {
         _count: {
-          pageVisited: 'desc'
+          page: 'desc'
         }
       }
     });
 
     res.json({
       pageStats: pageStats.map((stat: any) => ({
-        page: stat.pageVisited,
-        visits: stat._count.pageVisited,
+        page: stat.page,
+        visits: stat._count.page,
         averageTimeSpent: stat._avg.timeSpent || 0
       }))
     });
@@ -164,24 +165,24 @@ router.get('/daily-trends', async (req, res) => {
     daysAgo.setDate(daysAgo.getDate() - parseInt(days as string));
 
     const dailyStats = await prisma.visitorAnalytics.groupBy({
-      by: ['createdAt'],
+      by: ['timestamp'],
       where: {
-        createdAt: {
+        timestamp: {
           gte: daysAgo
         }
       },
       _count: {
-        sessionId: true
+        id: true
       },
       orderBy: {
-        createdAt: 'asc'
+        timestamp: 'asc'
       }
     });
 
     res.json({
       dailyTrends: dailyStats.map((stat: any) => ({
-        date: stat.createdAt.toISOString().split('T')[0],
-        visitors: stat._count.sessionId
+        date: stat.timestamp.toISOString().split('T')[0],
+        visitors: stat._count.id
       }))
     });
   } catch (error) {
